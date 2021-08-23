@@ -2,8 +2,7 @@ name: "PR Merge on time v2"
 
 on:
   schedule:
-  - cron: '0 19 * * 1-4'
-  - cron: '0 03 * * 5'
+  - cron: '00 13,14 * * *'
 
   workflow_dispatch:
 
@@ -17,7 +16,7 @@ jobs:
       - name: "Merge pull request"
         uses: "actions/github-script@v3"
         with:
-          github-token: ${{secrets.TOKEN}}
+          github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
             const query = `query($owner:String!, $name:String!) {
               repository(owner: $owner, name: $name) {
@@ -46,10 +45,10 @@ jobs:
             
             const {repository:{pullRequests:{edges: list}}} = await github.graphql(query, variables)
             for( let {node} of list) { 
+             if(node.baseRefName === "main") continue;
              await github.pulls.merge({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 pull_number: node.number,
-                merge_method: "rebase"
+                merge_method: "squash"
              })
-            }
