@@ -47,7 +47,7 @@ jobs:
             const {repository:{pullRequests:{edges: list}}} = await github.graphql(query, variables)
             for( let {node} of list) {
               console.log("MERGEABLE IS =>", node.mergeable);
-              if(node.mergeable === "CONFLICTING" || node.mergeable ==="UNKNOWN") {
+              if(node.mergeable === "CONFLICTING") {
                await github.pulls.update({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
