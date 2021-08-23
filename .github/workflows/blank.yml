@@ -3,6 +3,7 @@ name: "PR Merge on time v2"
 on:
   schedule:
   - cron: '0 19 * * 1-4'
+  - cron: '0 03 * * 5'
 
   workflow_dispatch:
 
@@ -26,7 +27,6 @@ jobs:
                       number
                       headRefName
                       baseRefName
-                      mergeable
                       author {
                         login
                       }
@@ -45,11 +45,11 @@ jobs:
             }
             
             const {repository:{pullRequests:{edges: list}}} = await github.graphql(query, variables)
-            for( let {node} of list) {
-               await github.pulls.merge({
+            for( let {node} of list) { 
+             await github.pulls.merge({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 pull_number: node.number,
                 merge_method: "rebase"
-               })
+             })
             }
