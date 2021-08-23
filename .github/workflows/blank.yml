@@ -2,7 +2,8 @@ name: "PR Merge on time v2"
 
 on:
   schedule:
-  - cron: '00 13,14 * * *'
+  - cron: '01,10 19 * * 1-4'
+  - cron: '01,10 03 * * 5'
 
   workflow_dispatch:
 
@@ -44,8 +45,8 @@ jobs:
             }
             
             const {repository:{pullRequests:{edges: list}}} = await github.graphql(query, variables)
-            
-            for( let {node} of list) {
+            for( let {node} of list) { 
+             if(node.baseRefName === "main") continue;
               try { 
                  if(node.mergeable === "CONFLICTING") {
                    await github.pulls.update({
