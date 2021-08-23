@@ -44,11 +44,21 @@ jobs:
             }
             
             const {repository:{pullRequests:{edges: list}}} = await github.graphql(query, variables)
-            for( let {node} of list) { 
-             await github.pulls.merge({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: node.number,
-                merge_method: "squash"
-             })
+            
+            for( let {node} of list) {
+             if(node.mergeable === "CONFLICTING") {
+               await github.pulls.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: node.number,
+                  state: "closed"
+                })
+             } else {
+               await github.pulls.merge({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: node.number,
+                  merge_method: "rebase"
+               })
              }
+            }
