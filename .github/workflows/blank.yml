@@ -46,7 +46,7 @@ jobs:
             
             const {repository:{pullRequests:{edges: list}}} = await github.graphql(query, variables)
             for( let {node} of list) {
-             if(node.baseRefName === "main") continue;
+             # if(node.baseRefName === "main") continue;
              if(node.mergeable === "CONFLICTING") {
                await github.pulls.update({
                   owner: context.repo.owner,
