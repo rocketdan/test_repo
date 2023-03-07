@@ -1,8 +1,8 @@
-name: "PR Merge on time v2"
+name: "PR Merge on time v3"
 
 on:
   schedule:
-  - cron: '00 13,14 * * *'
+  - cron: '0,10 12 * * 0,3,5,6'
 
   workflow_dispatch:
 
@@ -14,9 +14,9 @@ jobs:
     
     steps:
       - name: "Merge pull request"
-        uses: "actions/github-script@v3"
+        uses: "actions/github-script@v6"
         with:
-          github-token: ${{secrets.TOKEN}}
+          github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
             const query = `query($owner:String!, $name:String!) {
               repository(owner: $owner, name: $name) {
@@ -32,6 +32,12 @@ jobs:
                       repository {
                         name
                       }
+                      mergeable
+                      labels(first: 10) {
+                        nodes {
+                          name
+                        }
+                      }
                     }
                   }
                 }
@@ -45,10 +51,24 @@ jobs:
             
             const {repository:{pullRequests:{edges: list}}} = await github.graphql(query, variables)
             for( let {node} of list) { 
-             await github.pulls.merge({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: node.number,
-                merge_method: "squash"
-             })
-             }
+             if(node.baseRefName === "main" || !node.labels.nodes.length) continue;
+              try { 
+                 if(node.mergeable === "CONFLICTING") {
+                   await github.rest.pulls.update({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      pull_number: node.number,
+                      state: "closed"
+                    })
+                 } else {
+                   await github.rest.pulls.merge({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      pull_number: node.number,
+                      merge_method: "merge"
+                   })
+                 }
+               } catch (e) {
+                 console.log("error", e);
+               }
+            }
